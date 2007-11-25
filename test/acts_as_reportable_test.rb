@@ -1,3 +1,10 @@
+class Array
+  def to_table(columns)
+    Table(columns) { |t| each { |r| t << r } }    
+  end
+end
+    
+
 #!/usr/bin/env ruby -w
 require File.join(File.expand_path(File.dirname(__FILE__)), "helpers")
 
@@ -171,10 +178,10 @@ if Object.const_defined?(:ActiveRecord) && Object.const_defined?(:Mocha)
       
     def test_include_has_options
       actual = Team.report_table(:all, :only => 'name',
-        :include => { :players => { :only => 'name', :methods => :stats } })
-      expected = [["Testers", "Player 1", "Player 1 stats"],
-        ["Testers", "Player 2", "Player 2 stats"],
-        ["Others", nil, nil]].to_table(%w[name players.name players.stats])
+        :include => { :players => { :only => 'name' } })
+      expected = [["Testers", "Player 1"],
+        ["Testers", "Player 2"],
+        ["Others", nil]].to_table(%w[name players.name])
       assert_equal expected, actual
     end
     
