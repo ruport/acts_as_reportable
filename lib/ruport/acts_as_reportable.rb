@@ -303,7 +303,10 @@ module Ruport
         end
         
         # Reorder columns to match options[:only]
-        self.class.aar_columns = options[:only] if Array === options[:only]
+        if Array === options[:only]
+          cols = options[:only].map {|c| c.to_s }
+          self.class.aar_columns = cols
+        end
         
         self.class.aar_columns |= data_records.first.keys
         
