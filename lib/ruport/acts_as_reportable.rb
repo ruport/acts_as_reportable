@@ -167,8 +167,7 @@ module Ruport
         data = data.map {|r| r.reportable_data(:include => includes,
                                :only => only,
                                :except => except,
-                               :methods => methods) }.flatten
-
+                               :methods => methods) }.flatten   
 
         table = Ruport::Data::Table.new(:data => data,
                                         :column_names => aar_columns,
@@ -307,11 +306,12 @@ module Ruport
           cols = options[:only].map {|c| c.to_s }
           self.class.aar_columns = cols
         end
-        
-        self.class.aar_columns |= data_records.first.keys
+                            
+        self.class.aar_columns |= data_records.first.keys  
         
         data_records =
-          add_includes(data_records, options[:include]) if options[:include]
+          add_includes(data_records, options[:include]) if options[:include] 
+          
         data_records
       end
       

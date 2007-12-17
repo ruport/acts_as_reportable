@@ -168,7 +168,7 @@ if Object.const_defined?(:ActiveRecord) && Object.const_defined?(:Mocha)
       assert_equal expected, actual
     end
     
-    def test_column_sorting_works_with_include_option
+    def test_column_sorting_works_with_include_option  
       actual = Player.report_table(:all,
         :only     => %w[name personal_trainer.name],
         :include  => { :personal_trainer => { :only => %w[name] } })
