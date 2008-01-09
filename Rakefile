@@ -2,7 +2,7 @@ require "rake/rdoctask"
 require "rake/testtask"
 require "rake/gempackagetask"
 
-AAR_VERSION = "1.0.1"
+AAR_VERSION = "1.0.2"
 
 begin
   require "rubygems"
