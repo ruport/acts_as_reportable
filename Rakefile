@@ -2,7 +2,7 @@ require "rake/rdoctask"
 require "rake/testtask"
 require "rake/gempackagetask"
 
-AAR_VERSION = "1.0.2"
+AAR_VERSION = "1.1.0"
 
 begin
   require "rubygems"
@@ -31,7 +31,7 @@ spec = Gem::Specification.new do |spec|
   spec.has_rdoc = true
   #spec.extra_rdoc_files = %w{README LICENSE AUTHORS}
   spec.rdoc_options << '--title' << 'Ruport Documentation'
-  spec.add_dependency('ruport', '>= 1.3.0')
+  spec.add_dependency('ruport', '>= 1.6.0')
   spec.author = "Michael Milner"
   spec.email = "mikem836@gmail.com"
   spec.rubyforge_project = "ruport"
