@@ -369,11 +369,9 @@ module Ruport
       # name to the attribute name as association.attribute
       #
       def get_attributes_with_options(options = {})
-        only_or_except =
-          if options[:only] or options[:except]
-            { :only => options[:only], :except => options[:except] }
-          end
-        attrs = attributes(only_or_except)
+        attrs = attributes
+        attrs.slice!(*options[:only].map(&:to_s)) if options[:only]
+        attrs.except!(*options[:except].map(&:to_s)) if options[:except]
         attrs = attrs.inject({}) {|h,(k,v)|
                   h["#{options[:qualify_attribute_names]}.#{k}"] = v; h
                 } if options[:qualify_attribute_names]
