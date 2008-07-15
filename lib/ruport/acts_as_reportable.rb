@@ -13,7 +13,7 @@ require "ruport"
 Ruport.quiet { require "active_record" }
 
 module Ruport
-  
+
   # === Overview
   # 
   # This module is designed to allow an ActiveRecord model to be converted to
@@ -34,18 +34,18 @@ module Ruport
   #   Book.report_table(:all, :include => :author)
   #
   module Reportable
-    
+
     def self.included(base) #:nodoc:
       base.extend ClassMethods  
     end
-    
+
     # === Overview
     # 
     # This module contains class methods that will automatically be available
     # to ActiveRecord models.
     #
     module ClassMethods 
-      
+
       # In the ActiveRecord model you wish to integrate with Ruport, add the 
       # following line just below the class definition:
       #
@@ -79,7 +79,7 @@ module Ruport
         extend Ruport::Reportable::SingletonMethods
       end
     end
-    
+
     # === Overview
     # 
     # This module contains methods that will be made available as singleton
@@ -87,7 +87,7 @@ module Ruport
     # <tt>acts_as_reportable</tt>.
     #
     module SingletonMethods
-      
+
       # Creates a Ruport::Data::Table from an ActiveRecord find. Takes 
       # parameters just like a regular find.
       #
@@ -157,25 +157,30 @@ module Ruport
         filters = options.delete(:filters) 
         transforms = options.delete(:transforms)
         record_class = options.delete(:record_class) || Ruport::Data::Record
-        self.aar_columns = []
 
         unless options.delete(:eager_loading) == false
           options[:include] = get_include_for_find(includes)
         end
-        
-        data = [find(number, options)].flatten
-        data = data.map {|r| r.reportable_data(:include => includes,
-                               :only => only,
-                               :except => except,
-                               :methods => methods) }.flatten   
+
+        data = Array(find(number, options))
+        columns = []
+        data = data.map do |r|
+          row, new_cols = r.reportable_data(:include => includes,
+            :only => only,
+            :except => except,
+            :methods => methods)
+          columns |= new_cols
+          row
+        end
+        data.flatten!
 
         table = Ruport::Data::Table.new(:data => data,
-                                        :column_names => aar_columns,
+                                        :column_names => columns,
                                         :record_class => record_class,
                                         :filters => filters,
-                                        :transforms => transforms )
+                                        :transforms => transforms)
       end
-      
+
       # Creates a Ruport::Data::Table from an ActiveRecord find_by_sql.
       #
       # Additional options include:
@@ -215,7 +220,7 @@ module Ruport
       end
 
       private
-      
+
       def get_include_for_find(report_option)
         includes = report_option.blank? ? aar_options[:include] : report_option
         if includes.is_a?(Hash)
@@ -237,14 +242,14 @@ module Ruport
         end
       end
     end
-    
+
     # === Overview
     # 
     # This module contains methods that will be made available as instance
     # methods to any ActiveRecord model that calls <tt>acts_as_reportable</tt>.
     #
     module InstanceMethods
-      
+
       # Grabs all of the object's attributes and the attributes of the
       # associated objects and returns them as an array of record hashes.
       # 
@@ -290,8 +295,11 @@ module Ruport
       def reportable_data(options = {})
         options = options.merge(self.class.aar_options) unless
           has_report_options?(options)
-        
+
+        # Attributes for the current object
         data_records = [get_attributes_with_options(options)]
+
+        # Run any requested methods
         Array(options[:methods]).each do |method|
           if options[:qualify_attribute_names]
             m = "#{options[:qualify_attribute_names]}.#{method}"
@@ -300,21 +308,26 @@ module Ruport
           end
           data_records.first[m] = send(method)
         end
-        
+
         # Reorder columns to match options[:only]
-        if Array === options[:only]
-          cols = options[:only].map {|c| c.to_s }
-          self.class.aar_columns = cols
+        if options[:only].is_a?(Array)
+          if options[:qualify_attribute_names]
+            columns = options[:only].map {|c| "#{options[:qualify_attribute_names]}.#{c}" }
+          else
+            columns = options[:only].map {|c| c.to_s }
+          end
+        else
+          columns = data_records.first.keys
         end
-                            
-        self.class.aar_columns |= data_records.first.keys  
-        
-        data_records =
-          add_includes(data_records, options[:include]) if options[:include] 
-          
-        data_records
+
+        if options[:include]
+          data_records, new_columns = add_includes(data_records, options[:include])
+          columns |= new_columns
+        end
+
+        [data_records, columns]
       end
-      
+
       private
 
       # Add data for all included associations
@@ -322,37 +335,41 @@ module Ruport
       def add_includes(data_records, includes)
         include_has_options = includes.is_a?(Hash)
         associations = include_has_options ? includes.keys : Array(includes)
-        
+        new_records = []
+        new_columns = []
+
         associations.each do |association|
-          existing_records = data_records.dup
-          data_records = []
-          
           if include_has_options
             assoc_options = includes[association].merge({
-              :qualify_attribute_names => association })
+              :qualify_attribute_names => association
+            })
           else
-            assoc_options = { :qualify_attribute_names => association }
+            assoc_options = {:qualify_attribute_names => association}
           end
-          
-          association_objects = [send(association)].flatten.compact
-          
-          existing_records.each do |existing_record|
-            if association_objects.empty?
-              data_records << existing_record
-            else
-              association_objects.each do |obj|
-                association_records = obj.reportable_data(assoc_options)
-                association_records.each do |assoc_record|
-                  data_records << existing_record.merge(assoc_record)
+
+          assoc_objects = Array(send(association))
+
+          if assoc_objects.empty?
+            # Nothing to do for this loop
+            new_records = data_records
+          else
+            # Merge the associated objects own reportable data into the 2D records array
+            assoc_objects.each do |assoc_object|
+              assoc_records, assoc_cols = assoc_object.reportable_data(assoc_options)
+              new_columns |= assoc_cols
+              data_records.each do |record|
+                assoc_records.each do |assoc_record|
+                  new_records << record.merge(assoc_record)
                 end
-                self.class.aar_columns |= data_records.last.keys
               end
             end
           end
+          data_records = new_records
+          new_records = []
         end
-        data_records
+        [data_records, new_columns]
       end
-      
+
       # Check if the options hash has any report options
       # (:only, :except, :methods, or :include).
       #
@@ -370,13 +387,17 @@ module Ruport
       #
       def get_attributes_with_options(options = {})
         attrs = attributes
-        attrs.slice!(*options[:only].map(&:to_s)) if options[:only]
-        attrs.except!(*options[:except].map(&:to_s)) if options[:except]
-        attrs = attrs.inject({}) {|h,(k,v)|
-                  h["#{options[:qualify_attribute_names]}.#{k}"] = v; h
-                } if options[:qualify_attribute_names]
+        attrs.slice!(*options[:only].map {|a| a.to_s }) if options[:only]
+        attrs.except!(*options[:except].map {|a| a.to_s }) if options[:except]
+        if options[:qualify_attribute_names]
+          attrs = attrs.inject({}) do |h,(k,v)|
+            h["#{options[:qualify_attribute_names]}.#{k}"] = v
+            h
+          end
+        end
         attrs
       end
+
     end
   end
 end
