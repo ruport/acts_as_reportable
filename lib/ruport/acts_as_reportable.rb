@@ -296,33 +296,28 @@ module Ruport
         options = options.merge(self.class.aar_options) unless
           has_report_options?(options)
 
-        # Attributes for the current object
+        # Grab and parse attributes for the current object
+        # Includes :only, :except, and :methods processing
         data_records = [get_attributes_with_options(options)]
 
-        # Run any requested methods
-        Array(options[:methods]).each do |method|
-          if options[:qualify_attribute_names]
-            m = "#{options[:qualify_attribute_names]}.#{method}"
-          else
-            m = "#{method}"
-          end
-          data_records.first[m] = send(method)
-        end
+        columns = []
 
-        # Reorder columns to match options[:only]
+        # Reorder columns to match options[:only] order
         if options[:only].is_a?(Array)
           if options[:qualify_attribute_names]
             columns = options[:only].map {|c| "#{options[:qualify_attribute_names]}.#{c}" }
           else
             columns = options[:only].map {|c| c.to_s }
           end
-        else
-          columns = data_records.first.keys
         end
+
+        # Include any columns not specified in :only but also required,
+        # in practice this should just be :methods
+        columns |= data_records.first.keys
 
         if options[:include]
           data_records, new_columns = add_includes(data_records, options[:include])
-          columns |= new_columns
+          columns += new_columns
         end
 
         [data_records, columns]
@@ -389,6 +384,11 @@ module Ruport
         attrs = attributes
         attrs.slice!(*options[:only].map {|a| a.to_s }) if options[:only]
         attrs.except!(*options[:except].map {|a| a.to_s }) if options[:except]
+        if options[:methods].is_a?(Array)
+          options[:methods].each do |m|
+            attrs[m.to_s] = send(m)
+          end
+        end
         if options[:qualify_attribute_names]
           attrs = attrs.inject({}) do |h,(k,v)|
             h["#{options[:qualify_attribute_names]}.#{k}"] = v
