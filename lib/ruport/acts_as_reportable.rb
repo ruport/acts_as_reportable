@@ -162,7 +162,7 @@ module Ruport
           options[:include] = get_include_for_find(includes)
         end
 
-        data = Array(find(number, options))
+        data = [*find(number, options)]
         columns = []
         data = data.map do |r|
           row, new_cols = r.reportable_data(:include => includes,
@@ -329,7 +329,7 @@ module Ruport
       #
       def add_includes(data_records, includes)
         include_has_options = includes.is_a?(Hash)
-        associations = include_has_options ? includes.keys : Array(includes)
+        associations = include_has_options ? includes.keys : [*includes]
         new_records = []
         new_columns = []
 
@@ -342,7 +342,7 @@ module Ruport
             assoc_options = {:qualify_attribute_names => association}
           end
 
-          assoc_objects = Array(send(association))
+          assoc_objects = [*send(association)]
 
           if assoc_objects.empty?
             # Nothing to do for this loop
