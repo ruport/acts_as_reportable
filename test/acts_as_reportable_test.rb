@@ -10,7 +10,6 @@ require File.join(File.expand_path(File.dirname(__FILE__)), "helpers")
 
 begin
   require "mocha"
-  require "stubba"      
   Ruport.quiet { require "active_record" } 
 rescue LoadError
   nil
