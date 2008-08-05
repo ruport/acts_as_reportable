@@ -5,7 +5,7 @@ spec = Gem::Specification.new do |spec|
   spec.version = AAR_VERSION
   spec.platform = Gem::Platform::RUBY
   spec.summary = "ActiveRecord support for Ruby Reports"
-  spec.files =  Dir.glob("{lib,test}/**/**/*") +
+  spec.files =  ["lib/ruport", "lib/ruport/acts_as_reportable.rb", "test/acts_as_reportable_test.rb", "test/helpers.rb"] +
                       ["Rakefile"]
   spec.require_path = "lib"
   
