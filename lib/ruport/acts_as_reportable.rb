@@ -370,8 +370,9 @@ module Ruport
       #
       def get_attributes_with_options(options = {})
         attrs = attributes
-        attrs.slice!(*options[:only].map(&:to_s)) if options[:only]
-        attrs.except!(*options[:except].map(&:to_s)) if options[:except]
+        attrs.delete_if {|key, value| [*options[:except]].collect{|o| o.to_s}.include?( key.to_s) } if options[:except]
+        attrs.delete_if {|key, value| ![*options[:only]].collect{|o| o.to_s}.include?( key.to_s) } if options[:only]
+        
         attrs = attrs.inject({}) {|h,(k,v)|
                   h["#{options[:qualify_attribute_names]}.#{k}"] = v; h
                 } if options[:qualify_attribute_names]
