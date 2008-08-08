@@ -382,8 +382,8 @@ module Ruport
       #
       def get_attributes_with_options(options = {})
         attrs = attributes
-        attrs.slice!(*options[:only].map {|a| a.to_s }) if options[:only]
-        attrs.except!(*options[:except].map {|a| a.to_s }) if options[:except]
+        attrs.delete_if {|key, value| [*options[:except]].collect{|o| o.to_s}.include?( key.to_s) } if options[:except]
+        attrs.delete_if {|key, value| ![*options[:only]].collect{|o| o.to_s}.include?( key.to_s) } if options[:only]
         if options[:methods].is_a?(Array)
           options[:methods].each do |m|
             attrs[m.to_s] = send(m)
