@@ -317,7 +317,7 @@ module Ruport
 
         if options[:include]
           data_records, new_columns = add_includes(data_records, options[:include])
-          columns += new_columns
+          columns += new_columns unless new_columns.nil?
         end
 
         [data_records, columns]
@@ -350,11 +350,17 @@ module Ruport
           else
             # Merge the associated objects own reportable data into the 2D records array
             assoc_objects.each do |assoc_object|
-              assoc_records, assoc_cols = assoc_object.reportable_data(assoc_options)
-              new_columns |= assoc_cols
-              data_records.each do |record|
-                assoc_records.each do |assoc_record|
-                  new_records << record.merge(assoc_record)
+              if assoc_object.nil?
+                data_records.each do |record|
+                  new_records << record
+                end
+              else
+                assoc_records, assoc_cols = assoc_object.reportable_data(assoc_options)
+                new_columns |= assoc_cols
+                data_records.each do |record|
+                  assoc_records.each do |assoc_record|
+                    new_records << record.merge(assoc_record)
+                  end
                 end
               end
             end
