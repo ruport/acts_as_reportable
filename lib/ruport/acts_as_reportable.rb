@@ -400,8 +400,8 @@ module Ruport
         attrs = attributes
         attrs.delete_if {|key, value| [*options[:except]].collect{|o| o.to_s}.include?( key.to_s) } if options[:except]
         attrs.delete_if {|key, value| ![*options[:only]].collect{|o| o.to_s}.include?( key.to_s) } if options[:only]
-        if options[:methods].is_a?(Array)
-          options[:methods].each do |m|
+        if options[:methods]
+          [*options[:methods]].each do |m|
             attrs[m.to_s] = send(m)
           end
         end
