@@ -320,6 +320,11 @@ module Ruport
         # in practice this should just be :methods
         columns |= data_records.first.keys
 
+        # Order columns alphabetically if :only option is unspecified
+        unless options[:only]
+          columns.sort!
+        end
+
         if options[:include]
           data_records, new_columns = add_includes(data_records, options[:include])
           columns += new_columns unless new_columns.nil?
