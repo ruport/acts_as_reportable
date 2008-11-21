@@ -207,13 +207,18 @@ module Ruport
         record_class = options.delete(:record_class) || Ruport::Data::Record
         filters = options.delete(:filters) 
         transforms = options.delete(:transforms)
-        self.aar_columns = []
 
         data = find_by_sql(sql)
-        data = data.map {|r| r.reportable_data }.flatten
+        columns = []
+        data = data.map do |r|
+          table = r.reportable_data
+          columns |= table[1]
+          table[0]
+        end
+        data.flatten!
 
         table = Ruport::Data::Table.new(:data => data,
-                                        :column_names => aar_columns,
+                                        :column_names => columns,
                                         :record_class => record_class,
                                         :filters => filters,
                                         :transforms => transforms)
