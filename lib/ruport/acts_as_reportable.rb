@@ -163,6 +163,7 @@ module Ruport
         end
 
         data = [*find(number, options)]
+        data.compact!
         columns = []
         data = data.map do |r|
           row, new_cols = r.reportable_data(:include => includes,
