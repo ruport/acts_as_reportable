@@ -112,15 +112,15 @@ if Object.const_defined?(:ActiveRecord) && Object.const_defined?(:Mocha)
     
     def test_basic_report_table
       actual = Player.report_table
-      expected = [[1, "Player 1", 1],
-        [1, "Player 2", 2]].to_table(%w[team_id name personal_trainer_id])
+      expected = [['Player 1', 1, 1], ['Player 2', 2, 1]].
+          to_table(%w[name personal_trainer_id team_id])
       assert_equal expected, actual
     end
     
     def test_report_table_by_sql
       actual = Player.report_table_by_sql("SELECT * FROM players")
-      expected = [[1, "Player 1", 1],
-        [1, "Player 2", 2]].to_table(%w[team_id name personal_trainer_id])
+      expected = [["Player 1", 1, 1],
+        ["Player 2", 2, 1]].to_table(%w[name personal_trainer_id team_id])
       assert_equal expected, actual
     end
     
@@ -148,7 +148,7 @@ if Object.const_defined?(:ActiveRecord) && Object.const_defined?(:Mocha)
       
     def test_except_option
       actual = Player.report_table(:all, :except => 'personal_trainer_id')
-      expected = [[1, "Player 1"],[1, "Player 2"]].to_table(%w[team_id name])
+      expected = [["Player 1", 1],["Player 2", 1]].to_table(%w[name team_id])
       assert_equal expected, actual
     end
       
@@ -227,7 +227,8 @@ if Object.const_defined?(:ActiveRecord) && Object.const_defined?(:Mocha)
       expected = [{ 'team_id' => 1,
                     'name' => "Player 1",
                     'personal_trainer_id' => 1 }]
-      assert_equal expected, actual
+      assert_equal expected, actual.first
+      assert_equal ['name', 'personal_trainer_id', 'team_id'], actual[1]
     
       actual = @teams[0].reportable_data(:include =>
         { :players => { :only => 'name' } })
@@ -237,7 +238,8 @@ if Object.const_defined?(:ActiveRecord) && Object.const_defined?(:Mocha)
                     { 'name' => "Testers",
                     'league' => "My League",
                     'players.name' => "Player 2" }]
-      assert_equal expected, actual
+      assert_equal expected, actual.first
+      assert_equal ['league', 'name', 'players.name'], actual[1]
     end
     
     def test_add_includes
@@ -245,7 +247,7 @@ if Object.const_defined?(:ActiveRecord) && Object.const_defined?(:Mocha)
         [{ 'name' => "Player 1" }], :personal_trainer)
       expected = [{ 'name' => "Player 1",
                     'personal_trainer.name' => "Trainer 1" }]
-      assert_equal expected, actual
+      assert_equal expected, actual.first
     end
     
     def test_has_report_options
