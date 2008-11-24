@@ -145,6 +145,12 @@ if Object.const_defined?(:ActiveRecord) && Object.const_defined?(:Mocha)
         ["Player 2", 2, 1]].to_table(%w[name personal_trainer_id team_id])
       assert_equal expected, actual
     end
+
+    def test_only_option_allows_single_symbol
+      actual = Player.report_table(:all, :only => :name)
+      expected = [["Player 1"], ["Player 2"]].to_table(['name'])
+      assert_equal expected, actual
+    end
       
     def test_except_option
       actual = Player.report_table(:all, :except => 'personal_trainer_id')

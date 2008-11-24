@@ -309,11 +309,11 @@ module Ruport
         columns = []
 
         # Reorder columns to match options[:only] order
-        if options[:only].is_a?(Array)
+        if options[:only]
           if options[:qualify_attribute_names]
-            columns = options[:only].map {|c| "#{options[:qualify_attribute_names]}.#{c}" }
+            columns = [*options[:only]].map {|c| "#{options[:qualify_attribute_names]}.#{c}" }
           else
-            columns = options[:only].map {|c| c.to_s }
+            columns = [*options[:only]].map {|c| c.to_s }
           end
         end
 
