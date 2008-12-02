@@ -32,6 +32,10 @@ if Object.const_defined?(:ActiveRecord) && Object.const_defined?(:Mocha)
     def stats
       "#{name} stats"
     end
+
+    def personal_trainer_name
+      "#{personal_trainer.name} (Trainer)"
+    end
   end
   
   module SomeModule
@@ -162,6 +166,25 @@ if Object.const_defined?(:ActiveRecord) && Object.const_defined?(:Mocha)
       actual = Player.report_table(:all, :only => 'name', :methods => :stats)
       expected = [["Player 1", "Player 1 stats"],
                   ["Player 2", "Player 2 stats"]].to_table(%w[name stats])
+      assert_equal expected, actual
+    end
+
+    def test_methods_array_option
+      actual = Player.report_table(:all, :only => :name,
+          :methods => [:stats, :personal_trainer_name])
+      expected = [['Player 1', 'Trainer 1 (Trainer)', 'Player 1 stats'],
+                  ['Player 2', 'Trainer 2 (Trainer)', 'Player 2 stats']].
+                  to_table(%w[name personal_trainer_name stats])
+      assert_equal expected, actual
+    end
+
+    def test_methods_array_option_ordering_with_only
+      actual = Player.report_table(:all,
+          :only => [:name, :stats, :personal_trainer_name],
+          :methods => [:stats, :personal_trainer_name])
+      expected = [['Player 1', 'Player 1 stats', 'Trainer 1 (Trainer)'],
+                  ['Player 2', 'Player 2 stats', 'Trainer 2 (Trainer)']].
+                  to_table(%w[name stats personal_trainer_name])
       assert_equal expected, actual
     end
       

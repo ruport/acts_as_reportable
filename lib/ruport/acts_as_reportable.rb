@@ -317,8 +317,7 @@ module Ruport
           end
         end
 
-        # Include any columns not specified in :only but also required,
-        # in practice this should just be :methods
+        # Include any columns not specified in :only but also in hash
         columns |= data_records.first.keys
 
         # Order columns alphabetically if :only option is unspecified
