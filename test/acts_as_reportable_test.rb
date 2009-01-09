@@ -195,6 +195,22 @@ if Object.const_defined?(:ActiveRecord) && Object.const_defined?(:Mocha)
         ["Player 2", "Trainer 2"]].to_table(%w[name personal_trainer.name])
       assert_equal expected, actual
     end
+
+    def test_second_order_includes
+      actual = Team.report_table(:all, :only => 'name',
+        :include => {
+          :players => {
+            :only => 'name',
+            :include => {:personal_trainer => {:only => 'name'}}
+          }
+        })
+      expected = [
+          ['Testers', 'Player 1', 'Trainer 1'],
+          ['Testers', 'Player 2', 'Trainer 2'],
+          ['Others']
+        ].to_table(%w[name players.name personal_trainer.name])
+      assert_equal expected, actual
+    end
     
     def test_column_sorting_works_with_include_option  
       actual = Player.report_table(:all,
