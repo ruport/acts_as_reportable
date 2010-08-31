@@ -352,7 +352,8 @@ module Ruport
             assoc_options = {:qualify_attribute_names => association}
           end
 
-          assoc_objects = [*send(association)]
+          assoc_objects = send(association)
+          assoc_objects = [assoc_objects] unless assoc_objects.respond_to?(:each)
 
           if assoc_objects.empty?
             # Nothing to do for this loop
